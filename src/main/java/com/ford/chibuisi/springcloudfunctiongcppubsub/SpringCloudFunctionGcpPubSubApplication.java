@@ -2,6 +2,7 @@ package com.ford.chibuisi.springcloudfunctiongcppubsub;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ford.chibuisi.springcloudfunctiongcppubsub.model.Payment;
 import com.ford.chibuisi.springcloudfunctiongcppubsub.model.PaymentReport;
 import com.ford.chibuisi.springcloudfunctiongcppubsub.model.PubSubMessage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +14,9 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 @SpringBootApplication
@@ -35,13 +38,21 @@ public class SpringCloudFunctionGcpPubSubApplication {
             System.out.println("The Pub/Sub message data: " + message.getData());
             String data = new String(Base64.getDecoder().decode(message.getData()));
             System.out.println("The Pub/Sub data is : " + data);
-            PaymentReport paymentReport = null;
+            Payment payment = null;
             try {
-                paymentReport = objectMapper.readValue(data, PaymentReport.class);
+                payment = objectMapper.readValue(data, Payment.class);
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
             }
-            if(paymentReport!=null){
+            PaymentReport paymentReport = null;
+            if(payment!=null){
+                paymentReport = PaymentReport.builder()
+                        .uuid(UUID.randomUUID())
+                        .user(payment.getUser())
+                        .amount(payment.getAmount())
+                        .dateTime(LocalDateTime.now())
+                        .status("success")
+                        .build();
                 sendEmail(paymentReport);
             }
         };
@@ -56,7 +67,7 @@ public class SpringCloudFunctionGcpPubSubApplication {
             mimeMessageHelper.setText("Payment for account: " + paymentReport.getUser()
                     + "\n Amount " + paymentReport.getAmount()
                     + "  has been processed successfully on " + paymentReport.getDateTime()
-                    + "\n\n Thank you for your continued support \n\nEA fanatics");
+                    + "\n\nThank you for your continued support");
         }
         catch (MessagingException messagingException){
             messagingException.printStackTrace();

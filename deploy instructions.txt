@@ -1,0 +1,6 @@
+To deploy this function on GCP
+1. Have Cloud SDK installed
+2. Run the below command
+    gcloud functions deploy function-payment-sample-gcp-background --entry-point org.springframework.cloud.function.adapter.gcp.GcfJarLauncher --runtime java11 --trigger-topic payment --source target/deploy --memory 512MB
+3. Publish a message on the topic (payment)
+4. look at the function logs to verify function was triggered
