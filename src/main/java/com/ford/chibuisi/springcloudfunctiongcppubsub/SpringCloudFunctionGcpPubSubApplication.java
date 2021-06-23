@@ -13,6 +13,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+import java.util.Base64;
 import java.util.function.Consumer;
 
 @SpringBootApplication
@@ -20,11 +21,6 @@ public class SpringCloudFunctionGcpPubSubApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(SpringCloudFunctionGcpPubSubApplication.class, args);
-    }
-
-    @Bean
-    public ObjectMapper objectMapper(){
-        return new ObjectMapper();
     }
 
     @Autowired
@@ -37,7 +33,8 @@ public class SpringCloudFunctionGcpPubSubApplication {
     public Consumer<PubSubMessage> pubSubFunction() {
         return message -> {
             System.out.println("The Pub/Sub message data: " + message.getData());
-            String data = message.getData();
+            String data = new String(Base64.getDecoder().decode(message.getData()));
+            System.out.println("The Pub/Sub data is : " + data);
             PaymentReport paymentReport = null;
             try {
                 paymentReport = objectMapper.readValue(data, PaymentReport.class);
@@ -45,7 +42,7 @@ public class SpringCloudFunctionGcpPubSubApplication {
                 e.printStackTrace();
             }
             if(paymentReport!=null){
-
+                sendEmail(paymentReport);
             }
         };
     }
